@@ -6,20 +6,23 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
 
   const handleUpload = async () => {
-    if (!file) return alert("Select a file");
+  console.log("HANDLER CALLED");
 
-    const formData = new FormData();
-    formData.append("resume", file);
+  if (!file) return alert("Select a file");
 
-    const res = await fetch("/api/resume/upload", {
-      method: "POST",
-      body: formData,
-    });
+  const formData = new FormData();
+  formData.append("file", file);
 
-    const data = await res.json();
-    console.log(data);
-    alert("Uploaded successfully");
-  };
+  const res = await fetch("/api/resume/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  console.log("Response status:", res.status);
+
+  const data = await res.json();
+  console.log(data);
+};
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-6">
@@ -32,6 +35,7 @@ export default function UploadPage() {
       />
 
       <button
+      type="button"
         onClick={handleUpload}
         className="bg-black text-white px-6 py-2 rounded"
       >
