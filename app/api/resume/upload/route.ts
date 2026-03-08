@@ -1,3 +1,4 @@
+import { extractSkills } from "@/parsers/skillParser";
 import { supabase } from "@/lib/supabaseClient";
 // @ts-ignore
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
@@ -12,22 +13,25 @@ export async function POST(req: Request) {
     }
 
     const cleanName = file.name
-  .replace(/\s+/g, "_")        // replace spaces
-  .replace(/[^\w.-]/g, "");    // remove special chars
+      .replace(/\s+/g, "_")        // replace spaces
+      .replace(/[^\w.-]/g, "");    // remove special chars
 
-const fileName = `${Date.now()}-${cleanName}`;
+    const fileName = `${Date.now()}-${cleanName}`;
 
-// Convert file to Buffer (pdf-parse needs Buffer)
+    // Convert file to Buffer (pdf-parse needs Buffer)
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     // ✅ PDF PARSE
-    // const pdfParse = require("pdf-parse");
     const pdfData = await pdfParse(buffer);
     const extractedText: string = pdfData.text;
 
     console.log("Extracted length:", extractedText.length);
-//     // Upload to Supabase Storage
-    const {  error: uploadError } = await supabase
+
+    // Extract skills
+    const skills = extractSkills(extractedText);
+    console.log("Skills found:", skills);
+    //     // Upload to Supabase Storage
+    const { error: uploadError } = await supabase
       .storage
       .from("resumes")
       .upload(fileName, buffer, {
@@ -39,24 +43,28 @@ const fileName = `${Date.now()}-${cleanName}`;
       return new Response(JSON.stringify({ error: uploadError.message }), { status: 500 });
     }
 
-    const { error:dbError } = await supabase
-  .from("resumes")
-  .insert([
-    {
-      original_filename: file.name,
-      file_path: fileName,
-      extracted_text: extractedText,  // 🔥 use the extracted text
-      score: 0,
-    },
-  ]);
+    const { error: dbError } = await supabase
+      .from("resumes")
+      .insert([
+        {
+          original_filename: file.name,
+          file_path: fileName,
+          extracted_text: extractedText,  // 🔥 use the extracted text
+          score: 0,
+          detected_skills: skills, //added:store detected skills in db
+        },
+      ]);
 
-if (dbError) {
-  return Response.json({ error: dbError.message }, { status: 500 });
-}
-//just to check
-    return Response.json({ 
-      message: "Upload successful" ,
-      length: extractedText.length
+    if (dbError) {
+      return Response.json({ error: dbError.message }, { status: 500 });
+    }
+
+    return Response.json({
+      message: "Upload successful",
+      length: extractedText.length,
+      extractedText: extractedText,
+      detectedSkills: skills,
+      totalSkills: skills.length
     });
 
   } catch (error: any) {
