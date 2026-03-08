@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
-
+// @ts-ignore
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
@@ -20,7 +21,7 @@ const fileName = `${Date.now()}-${cleanName}`;
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     // ✅ PDF PARSE
-    const pdfParse = require("pdf-parse");
+    // const pdfParse = require("pdf-parse");
     const pdfData = await pdfParse(buffer);
     const extractedText: string = pdfData.text;
 
@@ -45,8 +46,8 @@ const fileName = `${Date.now()}-${cleanName}`;
       original_filename: file.name,
       file_path: fileName,
       extracted_text: extractedText,  // 🔥 use the extracted text
-      score: 0
-    }
+      score: 0,
+    },
   ]);
 
 if (dbError) {
