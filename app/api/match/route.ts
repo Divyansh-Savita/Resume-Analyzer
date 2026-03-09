@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { extractSkills } from "@/parsers/skillParser";
+import { extractSkillsAI } from "@/lib/ai";
 
 export async function POST(req: Request) {
     try {
@@ -13,28 +14,34 @@ export async function POST(req: Request) {
             );
         }
 
-        // extract skills from resume
-        const resumeSkills = extractSkills(resumeText);
+        // ⭐ Extract skills using AI
+        const resumeSkillsAI = await extractSkillsAI(resumeText);
+        const jobSkillsAI = await extractSkillsAI(jobDescription);
 
-        // extract skills from job description
-        const jobSkills = extractSkills(jobDescription);
+        const resumeSkills = resumeSkillsAI.skills;
+        const jobSkills = jobSkillsAI.skills;
 
-        // find matched skills
+        // ⭐ Find matched skills
         const matchedSkills = jobSkills.filter(skill =>
             resumeSkills.includes(skill)
         );
 
-        // find missing skills
+        // ⭐ Find missing skills
         const missingSkills = jobSkills.filter(skill =>
             !resumeSkills.includes(skill)
         );
 
-        // calculate ATS score
+        // ⭐ Calculate ATS score
         const score =
             jobSkills.length === 0
                 ? 0
                 : Math.round((matchedSkills.length / jobSkills.length) * 100);
 
+        console.log("ATS Score:", score);
+        console.log("Matched Skills:", matchedSkills);
+        console.log("Missing Skills:", missingSkills);
+        console.log("Resume Skills:", resumeSkills);
+        console.log("Job Skills:", jobSkills);
         return NextResponse.json({
             score,
             resumeSkills,
