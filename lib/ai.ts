@@ -34,7 +34,8 @@ Do not return explanations or markdown.
     const content = response.choices[0].message.content || "{}";
 
     try {
-        return JSON.parse(content);
+        const cleaned = content.replace(/```json/i, "").replace(/```/g, "").trim();
+        return JSON.parse(cleaned);
     } catch {
         return { error: "AI returned invalid JSON", raw: content };
     }
@@ -44,9 +45,24 @@ Do not return explanations or markdown.
 export async function extractSkillsAI(text: string): Promise<{ skills: string[] }> {
 
     const prompt = `
-Extract all technical skills from the following text.
+Extract ONLY technical skills from the text.
 
-Return ONLY JSON in this format:
+Include:
+- programming languages
+- frameworks
+- libraries
+- databases
+- developer tools
+- backend technologies
+- frontend technologies
+
+DO NOT include:
+- soft skills
+- personality traits
+- communication skills
+- thinking skills
+
+Return ONLY JSON:
 
 {
  "skills": []
@@ -64,7 +80,8 @@ ${text}
     const content = response.choices[0].message.content || "{}";
 
     try {
-        return JSON.parse(content) as { skills: string[] };
+        const cleaned = content.replace(/```json/i, "").replace(/```/g, "").trim();
+        return JSON.parse(cleaned) as { skills: string[] };
     } catch {
         return { skills: [] };
     }

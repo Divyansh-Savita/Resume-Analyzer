@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import AIAnalysis from "@/components/AIAnalysis";
+// import AIAnalysis from "@/components/AIAnalysis";
 
 export default function Home() {
 
@@ -27,7 +27,7 @@ export default function Home() {
 
     const resumeText = uploadData.extractedText;
 
-    //match resume with job description
+    // //match resume with job description
     const matchRes = await fetch("/api/match", {
       method: "POST",
       headers: {
@@ -40,6 +40,7 @@ export default function Home() {
     });
 
     const matchData = await matchRes.json();
+
     // ⭐ AI analysis step
     const aiRes = await fetch("/api/ai-analyze", {
       method: "POST",
@@ -94,42 +95,25 @@ export default function Home() {
 
       {result && (
         <div>
-          <h2>Match Score: {result.match.score}%</h2>
+          <h2>Match Score: {result?.match?.score ?? 0}%</h2>
 
           <h3>Matched Skills</h3>
           <ul>
-            {result.match.matchedSkills.map((s: string) => (
+            {result?.match?.matchedSkills?.map((s: string) => (
               <li key={s}>✅ {s}</li>
             ))}
           </ul>
 
           <h3>Missing Skills</h3>
           <ul>
-            {result.match.missingSkills.map((s: string) => (
+            {result?.match?.missingSkills?.map((s: string) => (
               <li key={s}>❌ {s}</li>
             ))}
           </ul>
           <hr />
-          {/* ⭐ AI results */}
-          <h2>AI Analysis</h2>
-
-          <h3>Matched Skills</h3>
-          <ul>
-            {result.ai.matchedSkills.map((s: string, i: number) => (
-              <li key={i}>✅ {s}</li>
-            ))}
-          </ul>
-
-          <h3>Missing Skills</h3>
-          <ul>
-            {result.ai.missingSkills.map((s: string, i: number) => (
-              <li key={i}>❌ {s}</li>
-            ))}
-          </ul>
-
           <h3>Suggestions</h3>
           <ul>
-            {result.ai.suggestions.map((s: string, i: number) => (
+            {(result?.ai?.suggestions?.length ? result.ai.suggestions : result?.match?.suggestions)?.map((s: string, i: number) => (
               <li key={i}>{s}</li>
             ))}
           </ul>
